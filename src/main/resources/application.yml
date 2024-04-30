@@ -1,0 +1,16 @@
+spring:
+  jackson:
+    parser:
+      allow-numeric-leading-zeros: true
+  application:
+    name: Clear Solution test assignment
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:mysql://localhost:3306/test_assignment?createIfNotExist=true
+    username: root
+    password: root
+user:
+  minAge: 18
