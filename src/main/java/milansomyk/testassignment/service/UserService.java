@@ -1,7 +1,9 @@
 package milansomyk.testassignment.service;
 
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import milansomyk.testassignment.constants.Constants;
 import milansomyk.testassignment.dto.ErrorDto;
 import milansomyk.testassignment.dto.RequestDto;
 import milansomyk.testassignment.dto.ResponseDto;
@@ -9,7 +11,6 @@ import milansomyk.testassignment.dto.UserDto;
 import milansomyk.testassignment.entity.User;
 import milansomyk.testassignment.mapper.UserMapper;
 import milansomyk.testassignment.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,142 +26,182 @@ import java.util.List;
 public class UserService {
     private final UserMapper userMapper;
     private final UserRepository userRepository;
-    @Value("${user.minAge}")
-    private Integer userMinAge;
 
     public ResponseDto<UserDto> createUser(RequestDto<UserDto> requestDto) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
         if (requestDto == null || requestDto.getData() == null) {
-            return errorHandler(responseDto, errorDto, "Exception, given User data is null!", HttpStatus.BAD_REQUEST);
+            log.error("Exception, given User data is null!");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User data is null!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
         if (!requestDto.getData().isAllRequired()) {
-            return errorHandler(responseDto, errorDto, "Exception, not given all required User parameters!", HttpStatus.BAD_REQUEST);
+            log.error("Exception, not given all required User parameters!");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, not given all required User parameters!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
         UserDto requestedUser = requestDto.getData();
-        if (requestedUser.getBirthDate().plusYears(userMinAge).isAfter(LocalDate.now())) {
-            return errorHandler(responseDto, errorDto, "Exception, given user birth date is less than " + userMinAge + " years!", HttpStatus.BAD_REQUEST);
+        if (requestedUser.getBirthDate().plusYears(Constants.USER_MIN_AGE).isAfter(LocalDate.now())) {
+            log.error("Exception, given user birth date is less than ");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given user birth date is less than " + Constants.USER_MIN_AGE + " years!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
         User user = userMapper.fromDto(requestedUser);
         User savedUser;
         try {
             savedUser = userRepository.save(user);
         } catch (Exception e) {
-            return errorHandler(responseDto, errorDto, "Exception while trying to save a user! Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error(e.getMessage());
+            errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to save a user! Error: " + e.getMessage());
+            return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(URI.create("/users/" + savedUser.getId()));
         return responseDto.fillParameters(HttpStatus.CREATED, httpHeaders, null, null);
     }
+
     public ResponseDto<UserDto> patchUser(RequestDto<UserDto> requestDto, Integer userId) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
         if (requestDto == null || requestDto.getData() == null) {
-            return errorHandler(responseDto, errorDto, "Exception, given user data!", HttpStatus.BAD_REQUEST);
+            log.error("Exception, given User data is null!");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User data is null!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
         if (!requestDto.getData().isAnyRequired()) {
-            return errorHandler(responseDto, errorDto, "Exception, not given any required User parameters!", HttpStatus.BAD_REQUEST);
+            log.error("Exception, not given any required User parameters!");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, not given any required User parameters!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
         if (userId == null) {
-            return errorHandler(responseDto, errorDto, "Exception, given user id is null!", HttpStatus.BAD_REQUEST);
+            log.error("Exception, given User id is null!");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User id is null!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
         UserDto requestedUser = requestDto.getData();
         User savedUser;
         try {
             savedUser = userRepository.findById(userId).orElse(null);
         } catch (Exception e) {
-            return errorHandler(responseDto, errorDto, e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error(e.getMessage());
+            errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to get a user! Error: " + e.getMessage());
+            return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         if (savedUser == null) {
-            return errorHandler(responseDto, errorDto, "Exception! User with this id: " + userId + " was not found!", HttpStatus.BAD_REQUEST);
+            log.error("Exception! User with this id: " + userId + " was not found!");
+            errorDto.fillParameters(HttpStatus.NOT_FOUND.value(), "Exception! User with this id: " + userId + " was not found!");
+            return responseDto.setErrorResponse(HttpStatus.NOT_FOUND, errorDto);
         }
         User changedUser = updateExistedFields(requestedUser, savedUser);
         try {
             userRepository.save(changedUser);
         } catch (Exception e) {
-            return errorHandler(responseDto, errorDto, e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Exception while trying to save a user! Error: " + e.getMessage());
+            errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to save a user! Error: " + e.getMessage());
+            return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, null, null);
     }
+
     public ResponseDto<UserDto> updateUser(RequestDto<UserDto> requestDto, Integer userId) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
         if (requestDto == null || requestDto.getData() == null) {
-            return errorHandler(responseDto, errorDto, "Exception, given user data is null!", HttpStatus.BAD_REQUEST);
+            log.error("Exception, given User data is null!");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User data is null!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
         if (!requestDto.getData().isAllFieldsNotNull()) {
-            return errorHandler(responseDto, errorDto, "Exception, not given all User parameters!", HttpStatus.BAD_REQUEST);
+            log.error("Exception, not given all User parameters!");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, not given all User parameters!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
         if (userId == null) {
-            return errorHandler(responseDto, errorDto, "Exception, given user id is null!", HttpStatus.BAD_REQUEST);
+            log.error("Exception, given User id is null!");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User id is null!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
         UserDto requestedUser = requestDto.getData();
         User savedUser;
         try {
             savedUser = userRepository.findById(userId).orElse(null);
         } catch (Exception e) {
-            return errorHandler(responseDto, errorDto, e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Exception while trying to save user! Error: " + e.getMessage());
+            errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to save user! Error: " + e.getMessage());
+            return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         if (savedUser == null) {
-            return errorHandler(responseDto, errorDto, "Exception! User with this id: " + userId + " was not found!", HttpStatus.BAD_REQUEST);
+            log.error("Exception! User with this id: " + userId + " was not found!");
+            errorDto.fillParameters(HttpStatus.NOT_FOUND.value(), "Exception! User with this id: " + userId + " was not found!");
+            return responseDto.setErrorResponse(HttpStatus.NOT_FOUND, errorDto);
         }
         updateExistedFields(requestedUser, savedUser);
         try {
             userRepository.save(savedUser);
         } catch (Exception e) {
-            return errorHandler(responseDto, errorDto, e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Exception while trying to save a user! Error: " + e.getMessage());
+            errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to save a user! Error: " + e.getMessage());
+            return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, null, null);
     }
+
     public ResponseDto<UserDto> deleteUser(Integer userId) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
         if (userId == null) {
-            return errorHandler(responseDto, errorDto, "Exception, given user id is null!", HttpStatus.BAD_REQUEST);
+            log.error("Exception, given user id is null!");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given user id is null!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
         try {
             userRepository.deleteById(userId);
         } catch (Exception e) {
-            return errorHandler(responseDto, errorDto, e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Exception while trying to delete a user! Error: " + e.getMessage());
+            errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to delete a user! Error: " + e.getMessage());
+            return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, null, null);
     }
+
     public ResponseDto<List<UserDto>> searchUsersByBirthDateRange(String from, String to) {
         ResponseDto<List<UserDto>> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
-        if(from == null || to == null) {
-            return errorHandlerUserList(responseDto,errorDto,"Exception! Given query params is null!",HttpStatus.BAD_REQUEST);
+        if (StringUtils.isEmpty(from) || StringUtils.isEmpty(to)) {
+            log.error("Exception! Given query params is null!");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception! Given query params is null!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
-        LocalDate fromDate = LocalDate.parse(from);
-        LocalDate toDate = LocalDate.parse(to);
-        if(fromDate.isAfter(toDate)) {
-            return errorHandlerUserList(responseDto,errorDto,"Exception! Given 'from' query more than 'to' query!",HttpStatus.BAD_REQUEST);
+        LocalDate fromDate;
+        LocalDate toDate;
+        try {
+            fromDate = LocalDate.parse(from);
+            toDate = LocalDate.parse(to);
+        } catch (Exception e) {
+            log.error("Exception while trying to parse the query params! Error: " + e.getMessage());
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception while trying to parse the query params! Error: " + e.getMessage());
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
+        }
+        if (fromDate.isAfter(toDate)) {
+            log.error("Exception! Given 'from' query more than 'to' query!");
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception! Given 'from' query more than 'to' query!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
         List<User> searchedUsers;
         try {
             searchedUsers = userRepository.searchUserByBirthDateBetween(fromDate, toDate);
         } catch (Exception e) {
-            return errorHandlerUserList(responseDto,errorDto,e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Exception while trying to get searched users! Error: " + e.getMessage());
+            errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to get searched users! Error: " + e.getMessage());
+            return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         List<UserDto> userDtoList = new ArrayList<>();
-        if(!searchedUsers.isEmpty()) {
+        if (!searchedUsers.isEmpty()) {
             userDtoList = searchedUsers.stream().map(userMapper::toDto).toList();
         }
         return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, userDtoList, null);
     }
 
-    private ResponseDto<UserDto> errorHandler(ResponseDto<UserDto> responseDto, ErrorDto errorDto, String errorMessage, HttpStatus httpStatus) {
-        log.error(errorMessage);
-        errorDto.setStatus(httpStatus.value());
-        errorDto.setDetail(errorMessage);
-        return responseDto.fillParameters(httpStatus, HttpHeaders.EMPTY, null, errorDto);
-    }
-    private ResponseDto<List<UserDto>> errorHandlerUserList(ResponseDto<List<UserDto>> responseDto, ErrorDto errorDto, String errorMessage, HttpStatus httpStatus) {
-        log.error(errorMessage);
-        errorDto.setStatus(httpStatus.value());
-        errorDto.setDetail(errorMessage);
-        return responseDto.fillParameters(httpStatus, HttpHeaders.EMPTY, null, errorDto);
-    }
     private User updateExistedFields(UserDto userDto, User userToChange) {
         if (userDto.hasAddress()) {
             userToChange.setAddress(userDto.getAddress());

@@ -10,4 +10,8 @@ import lombok.RequiredArgsConstructor;
 public class ErrorDto {
     int status;
     String detail;
+    public void fillParameters(int statusValue, String detailMessage){
+        this.status = statusValue;
+        this.detail = detailMessage;
+    }
 }

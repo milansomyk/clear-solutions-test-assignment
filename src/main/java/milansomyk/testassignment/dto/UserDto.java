@@ -23,7 +23,7 @@ public class UserDto {
     @Size(min = 2, max = 32, message = "Validation Exception! Error: Last name must be between 2 and 32 characters long")
     String lastName;
     @PastOrPresent(message = "Validation Exception! Error: Birth date may not be future date")
-//    @NotNull(message = "Birth date may not be null")
+
     LocalDate birthDate;
     @Size(min = 2, max = 32, message = "Validation Exception! Error: Address have to be between 2 and 32 letters")
     String address;

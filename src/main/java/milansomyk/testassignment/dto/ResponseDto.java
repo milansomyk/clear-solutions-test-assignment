@@ -34,4 +34,11 @@ public class ResponseDto<D> {
         this.body = bodyDto;
         return this;
     }
+    public ResponseDto<D> setErrorResponse(HttpStatus httpStatus, ErrorDto error){
+        BodyDto<D> bodyDto = new BodyDto<>();
+        this.httpHeaders = HttpHeaders.EMPTY;
+        this.httpStatus = httpStatus;
+        this.body = bodyDto.addError(error);
+        return this;
+    }
 }
