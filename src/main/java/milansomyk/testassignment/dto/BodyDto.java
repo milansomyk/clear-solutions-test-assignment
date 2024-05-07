@@ -17,4 +17,8 @@ public class BodyDto<T> {
         this.errors.add(error);
         return this;
     }
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    PaginationLinks links;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    PaginationInfo pagination;
 }

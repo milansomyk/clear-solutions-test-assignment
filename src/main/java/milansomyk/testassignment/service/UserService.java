@@ -4,10 +4,7 @@ import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import milansomyk.testassignment.constants.Constants;
-import milansomyk.testassignment.dto.ErrorDto;
-import milansomyk.testassignment.dto.RequestDto;
-import milansomyk.testassignment.dto.ResponseDto;
-import milansomyk.testassignment.dto.UserDto;
+import milansomyk.testassignment.dto.*;
 import milansomyk.testassignment.entity.User;
 import milansomyk.testassignment.mapper.UserMapper;
 import milansomyk.testassignment.repository.UserRepository;
@@ -19,6 +16,7 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -57,10 +55,10 @@ public class UserService {
         }
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(URI.create("/users/" + savedUser.getId()));
-        return responseDto.fillParameters(HttpStatus.CREATED, httpHeaders, null, null);
+        return responseDto.fillParameters(HttpStatus.CREATED, httpHeaders, null, null,null,null);
     }
 
-    public ResponseDto<UserDto> patchUser(RequestDto<UserDto> requestDto, Integer userId) {
+    public ResponseDto<UserDto> patchUser(RequestDto<UserDto> requestDto, UUID userId) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
         if (requestDto == null || requestDto.getData() == null) {
@@ -88,7 +86,7 @@ public class UserService {
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         if (savedUser == null) {
-            log.error("Exception! User with this id: " + userId + " was not found!");
+            log.error("Exception! User with this id: {} was not found!", userId);
             errorDto.fillParameters(HttpStatus.NOT_FOUND.value(), "Exception! User with this id: " + userId + " was not found!");
             return responseDto.setErrorResponse(HttpStatus.NOT_FOUND, errorDto);
         }
@@ -96,14 +94,14 @@ public class UserService {
         try {
             userRepository.save(changedUser);
         } catch (Exception e) {
-            log.error("Exception while trying to save a user! Error: " + e.getMessage());
+            log.error("Exception while trying to save a user! Error: {}", e.getMessage());
             errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to save a user! Error: " + e.getMessage());
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
-        return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, null, null);
+        return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, null, null, null, null);
     }
 
-    public ResponseDto<UserDto> updateUser(RequestDto<UserDto> requestDto, Integer userId) {
+    public ResponseDto<UserDto> updateUser(RequestDto<UserDto> requestDto, UUID userId) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
         if (requestDto == null || requestDto.getData() == null) {
@@ -126,12 +124,12 @@ public class UserService {
         try {
             savedUser = userRepository.findById(userId).orElse(null);
         } catch (Exception e) {
-            log.error("Exception while trying to save user! Error: " + e.getMessage());
+            log.error("Exception while trying to save user! Error: {}", e.getMessage());
             errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to save user! Error: " + e.getMessage());
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         if (savedUser == null) {
-            log.error("Exception! User with this id: " + userId + " was not found!");
+            log.error("Exception! User with this id: {} was not found!", userId);
             errorDto.fillParameters(HttpStatus.NOT_FOUND.value(), "Exception! User with this id: " + userId + " was not found!");
             return responseDto.setErrorResponse(HttpStatus.NOT_FOUND, errorDto);
         }
@@ -139,14 +137,14 @@ public class UserService {
         try {
             userRepository.save(savedUser);
         } catch (Exception e) {
-            log.error("Exception while trying to save a user! Error: " + e.getMessage());
+            log.error("Exception while trying to save a user! Error: {}", e.getMessage());
             errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to save a user! Error: " + e.getMessage());
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
-        return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, null, null);
+        return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, null, null, null, null);
     }
 
-    public ResponseDto<UserDto> deleteUser(Integer userId) {
+    public ResponseDto<UserDto> deleteUser(UUID userId) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
         if (userId == null) {
@@ -157,16 +155,23 @@ public class UserService {
         try {
             userRepository.deleteById(userId);
         } catch (Exception e) {
-            log.error("Exception while trying to delete a user! Error: " + e.getMessage());
+            log.error("Exception while trying to delete a user! Error: {}", e.getMessage());
             errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to delete a user! Error: " + e.getMessage());
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
-        return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, null, null);
+        return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, null, null, null, null);
     }
 
-    public ResponseDto<List<UserDto>> searchUsersByBirthDateRange(String from, String to) {
+    public ResponseDto<List<UserDto>> searchUsersByBirthDateRange(String from, String to, Integer offset, Integer limit) {
         ResponseDto<List<UserDto>> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
+
+        if(offset==null || offset<0 || limit==null || limit<0) {
+            log.error("Exception, given offset or limit is null or negative value!");
+            limit = 100;
+            offset = 0;
+        }
+
         if (StringUtils.isEmpty(from) || StringUtils.isEmpty(to)) {
             log.error("Exception! Given query params is null!");
             errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception! Given query params is null!");
@@ -178,7 +183,7 @@ public class UserService {
             fromDate = LocalDate.parse(from);
             toDate = LocalDate.parse(to);
         } catch (Exception e) {
-            log.error("Exception while trying to parse the query params! Error: " + e.getMessage());
+            log.error("Exception while trying to parse the query params! Error: {}", e.getMessage());
             errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception while trying to parse the query params! Error: " + e.getMessage());
             return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
@@ -189,17 +194,38 @@ public class UserService {
         }
         List<User> searchedUsers;
         try {
-            searchedUsers = userRepository.searchUserByBirthDateBetween(fromDate, toDate);
+            searchedUsers = userRepository.searchUserByBirthDateRange(fromDate, toDate, limit, offset);
         } catch (Exception e) {
-            log.error("Exception while trying to get searched users! Error: " + e.getMessage());
+            log.error("Exception while trying to get searched users! Error: {}", e.getMessage());
             errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to get searched users! Error: " + e.getMessage());
+            return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
+        }
+        Integer totalSearchedUsers;
+        try{
+            totalSearchedUsers = userRepository.countAllByBirthDateBetween(fromDate, toDate);
+        }catch (Exception e){
+            log.error("Exception while trying to get searched users total number! Error: {}", e.getMessage());
+            errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to get searched users total number! Error: " + e.getMessage());
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         List<UserDto> userDtoList = new ArrayList<>();
         if (!searchedUsers.isEmpty()) {
             userDtoList = searchedUsers.stream().map(userMapper::toDto).toList();
         }
-        return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, userDtoList, null);
+
+        PaginationLinks paginationLinks = new PaginationLinks();
+        if(offset-limit>=0){
+            paginationLinks.setPrev(Constants.USER_ENDPOINT + "?from=" + from + "&to=" + to + "&offset=" + (offset-limit) + "&limit=" + limit);
+        }
+        if(offset+limit<totalSearchedUsers){
+            paginationLinks.setNext(Constants.USER_ENDPOINT + "?from=" + from + "&to=" + to + "&offset=" + (offset+limit) + "&limit=" + limit);
+        }
+
+        PaginationInfo paginationInfo = new PaginationInfo();
+        paginationInfo.setLimit(limit);
+        paginationInfo.setOffset(offset);
+        paginationInfo.setTotal(totalSearchedUsers);
+        return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, userDtoList, null, paginationLinks, paginationInfo);
     }
 
     private User updateExistedFields(UserDto userDto, User userToChange) {

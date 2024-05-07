@@ -15,16 +15,12 @@ public class UserDto {
     @JsonIgnore
     UUID id;
     @Email(message = "Validation Exception! Error: Email is not validated")
-//    @NotEmpty(message = "Email may not be empty")
     String email;
-//    @NotEmpty(message = "First name may not be empty")
     @Size(min = 2, max = 32, message = "Validation Exception! Error: First name must be between 2 and 32 characters long")
     String firstName;
-//    @NotEmpty(message = "Last name may not be empty")
     @Size(min = 2, max = 32, message = "Validation Exception! Error: Last name must be between 2 and 32 characters long")
     String lastName;
     @PastOrPresent(message = "Validation Exception! Error: Birth date may not be future date")
-
     LocalDate birthDate;
     @Size(min = 2, max = 32, message = "Validation Exception! Error: Address have to be between 2 and 32 letters")
     String address;

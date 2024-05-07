@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("users")
@@ -25,23 +26,23 @@ public class UserController {
         return ResponseEntity.status(responseDto.getHttpStatus()).headers(responseDto.getHttpHeaders()).body(responseDto.getBody());
     }
     @PatchMapping("/{userId}")
-    public ResponseEntity<BodyDto<UserDto>> patchUser(@PathVariable Integer userId, @RequestBody @Valid RequestDto<UserDto> requestDto){
+    public ResponseEntity<BodyDto<UserDto>> patchUser(@PathVariable UUID userId, @RequestBody @Valid RequestDto<UserDto> requestDto){
         ResponseDto<UserDto> responseDto = userService.patchUser(requestDto, userId);
         return ResponseEntity.status(responseDto.getHttpStatus()).headers(responseDto.getHttpHeaders()).body(responseDto.getBody());
     }
     @PutMapping("/{userId}")
-    public ResponseEntity<BodyDto<UserDto>> updateUser(@PathVariable Integer userId, @RequestBody @Valid RequestDto<UserDto> requestDto){
+    public ResponseEntity<BodyDto<UserDto>> updateUser(@PathVariable UUID userId, @RequestBody @Valid RequestDto<UserDto> requestDto){
         ResponseDto<UserDto> responseDto = userService.updateUser(requestDto, userId);
         return ResponseEntity.status(responseDto.getHttpStatus()).headers(responseDto.getHttpHeaders()).body(responseDto.getBody());
     }
     @DeleteMapping("/{userId}")
-    public ResponseEntity<BodyDto<UserDto>> deleteUser(@PathVariable Integer userId){
+    public ResponseEntity<BodyDto<UserDto>> deleteUser(@PathVariable UUID userId){
         ResponseDto<UserDto> responseDto = userService.deleteUser(userId);
         return ResponseEntity.status(responseDto.getHttpStatus()).headers(responseDto.getHttpHeaders()).body(responseDto.getBody());
     }
     @GetMapping
-    public ResponseEntity<BodyDto<List<UserDto>>> getUsersByBirthRange(@RequestParam String from, @RequestParam String to){
-        ResponseDto<List<UserDto>> listResponseDto = userService.searchUsersByBirthDateRange(from, to);
+    public ResponseEntity<BodyDto<List<UserDto>>> getUsersByBirthRange(@RequestParam String from, @RequestParam String to, @RequestParam(required = false) Integer offset, @RequestParam(required = false) Integer limit){
+        ResponseDto<List<UserDto>> listResponseDto = userService.searchUsersByBirthDateRange(from, to, offset, limit);
         return ResponseEntity.status(listResponseDto.getHttpStatus()).headers(listResponseDto.getHttpHeaders()).body(listResponseDto.getBody());
     }
 }

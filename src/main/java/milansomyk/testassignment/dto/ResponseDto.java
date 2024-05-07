@@ -19,7 +19,8 @@ public class ResponseDto<D> {
     HttpHeaders httpHeaders;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     BodyDto<D> body;
-    public ResponseDto<D> fillParameters(HttpStatus httpStatus, HttpHeaders httpHeaders, D data, ErrorDto error){
+
+    public ResponseDto<D> fillParameters(HttpStatus httpStatus, HttpHeaders httpHeaders, D data, ErrorDto error, PaginationLinks links, PaginationInfo paginationInfo){
         this.httpStatus = httpStatus;
         this.httpHeaders = httpHeaders;
         BodyDto<D> bodyDto = new BodyDto<>();
@@ -32,6 +33,8 @@ public class ResponseDto<D> {
             bodyDto.errors = null;
         }
         this.body = bodyDto;
+        this.body.links = links;
+        this.body.pagination = paginationInfo;
         return this;
     }
     public ResponseDto<D> setErrorResponse(HttpStatus httpStatus, ErrorDto error){
@@ -39,6 +42,7 @@ public class ResponseDto<D> {
         this.httpHeaders = HttpHeaders.EMPTY;
         this.httpStatus = httpStatus;
         this.body = bodyDto.addError(error);
+        this.body.links = null;
         return this;
     }
 }
