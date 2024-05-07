@@ -5,6 +5,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -12,7 +13,7 @@ import java.time.LocalDate;
 @Builder
 public class UserDto {
     @JsonIgnore
-    Integer id;
+    UUID id;
     @Email(message = "Validation Exception! Error: Email is not validated")
 //    @NotEmpty(message = "Email may not be empty")
     String email;

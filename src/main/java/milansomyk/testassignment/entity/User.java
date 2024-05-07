@@ -6,14 +6,16 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.UUID;
+
 @Entity
 @Data
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    Integer id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    UUID id;
     @Column(unique = true, nullable = false)
     String email;
     @Column(nullable = false)
