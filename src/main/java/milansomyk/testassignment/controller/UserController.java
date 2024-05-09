@@ -7,6 +7,7 @@ import milansomyk.testassignment.dto.RequestDto;
 import milansomyk.testassignment.dto.ResponseDto;
 import milansomyk.testassignment.dto.UserDto;
 import milansomyk.testassignment.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Validated
 public class UserController {
+    @Autowired
     private final UserService userService;
+
     @PostMapping
     public ResponseEntity<BodyDto<UserDto>> createUser(@RequestBody @Valid RequestDto<UserDto> requestDto){
         ResponseDto<UserDto> responseDto = userService.createUser(requestDto);
@@ -41,7 +44,7 @@ public class UserController {
         return ResponseEntity.status(responseDto.getHttpStatus()).headers(responseDto.getHttpHeaders()).body(responseDto.getBody());
     }
     @GetMapping
-    public ResponseEntity<BodyDto<List<UserDto>>> getUsersByBirthRange(@RequestParam String from, @RequestParam String to, @RequestParam(required = false) Integer offset, @RequestParam(required = false) Integer limit){
+    public ResponseEntity<BodyDto<List<UserDto>>> getUsersByBirthRange(@RequestParam String from, @RequestParam String to, @RequestParam(required = false, defaultValue = "0") Integer offset, @RequestParam(required = false, defaultValue = "100") Integer limit){
         ResponseDto<List<UserDto>> listResponseDto = userService.searchUsersByBirthDateRange(from, to, offset, limit);
         return ResponseEntity.status(listResponseDto.getHttpStatus()).headers(listResponseDto.getHttpHeaders()).body(listResponseDto.getBody());
     }

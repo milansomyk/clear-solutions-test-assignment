@@ -8,6 +8,7 @@ import milansomyk.testassignment.dto.*;
 import milansomyk.testassignment.entity.User;
 import milansomyk.testassignment.mapper.UserMapper;
 import milansomyk.testassignment.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,11 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+
 public class UserService {
+    @Autowired
     private final UserMapper userMapper;
+    @Autowired
     private final UserRepository userRepository;
 
     public ResponseDto<UserDto> createUser(RequestDto<UserDto> requestDto) {
@@ -165,13 +169,6 @@ public class UserService {
     public ResponseDto<List<UserDto>> searchUsersByBirthDateRange(String from, String to, Integer offset, Integer limit) {
         ResponseDto<List<UserDto>> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
-
-        if(offset==null || offset<0 || limit==null || limit<0) {
-            log.error("Exception, given offset or limit is null or negative value!");
-            limit = 100;
-            offset = 0;
-        }
-
         if (StringUtils.isEmpty(from) || StringUtils.isEmpty(to)) {
             log.error("Exception! Given query params is null!");
             errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception! Given query params is null!");
