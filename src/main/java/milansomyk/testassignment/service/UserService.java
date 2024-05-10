@@ -33,6 +33,7 @@ public class UserService {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
         User user = userMapper.fromDto(requestDto.getData());
+        user.setUuid(UUID.randomUUID());
         User savedUser;
         try {
             savedUser = userRepository.save(user);
@@ -42,14 +43,14 @@ public class UserService {
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setLocation(URI.create(Constants.USER_ENDPOINT + "/" + savedUser.getId()));
+        httpHeaders.setLocation(URI.create(Constants.USER_ENDPOINT + "/" + savedUser.getUuid()));
         return responseDto.fillParameters(HttpStatus.CREATED, httpHeaders, null, null, null, null);
     }
 
-    public ResponseDto<UserDto> patchUser(RequestDto<UserDto> requestDto, UUID userId) {
+    public ResponseDto<UserDto> patchUser(RequestDto<UserDto> requestDto, UUID userUuid) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
-        if (ObjectUtils.isEmpty(userId)) {
+        if (ObjectUtils.isEmpty(userUuid)) {
             log.error("Exception, given User id is null!");
             errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User id is null!");
             return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
@@ -57,15 +58,15 @@ public class UserService {
         UserDto requestedUser = requestDto.getData();
         User savedUser;
         try {
-            savedUser = userRepository.findById(userId).orElse(null);
+            savedUser = userRepository.findByUuid(userUuid).orElse(null);
         } catch (Exception e) {
             log.error(e.getMessage());
             errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to get a user! Error: " + e.getMessage());
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         if (savedUser == null) {
-            log.error("Exception! User with this id: {} was not found!", userId);
-            errorDto.fillParameters(HttpStatus.NOT_FOUND.value(), "Exception! User with this id: " + userId + " was not found!");
+            log.error("Exception! User with this id: {} was not found!", userUuid);
+            errorDto.fillParameters(HttpStatus.NOT_FOUND.value(), "Exception! User with this id: " + userUuid + " was not found!");
             return responseDto.setErrorResponse(HttpStatus.NOT_FOUND, errorDto);
         }
         User changedUser = updateExistedFields(requestedUser, savedUser);
@@ -79,10 +80,10 @@ public class UserService {
         return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, null, null, null, null);
     }
 
-    public ResponseDto<UserDto> updateUser(RequestDto<UserDto> requestDto, UUID userId) {
+    public ResponseDto<UserDto> updateUser(RequestDto<UserDto> requestDto, UUID userUuid) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
-        if (ObjectUtils.isEmpty(userId)) {
+        if (ObjectUtils.isEmpty(userUuid)) {
             log.error("Exception, given User id is null!");
             errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User id is null!");
             return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
@@ -90,15 +91,15 @@ public class UserService {
         UserDto requestedUser = requestDto.getData();
         User savedUser;
         try {
-            savedUser = userRepository.findById(userId).orElse(null);
+            savedUser = userRepository.findByUuid(userUuid).orElse(null);
         } catch (Exception e) {
             log.error("Exception while trying to save user! Error: {}", e.getMessage());
             errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to save user! Error: " + e.getMessage());
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         if (savedUser == null) {
-            log.error("Exception! User with this id: {} was not found!", userId);
-            errorDto.fillParameters(HttpStatus.NOT_FOUND.value(), "Exception! User with this id: " + userId + " was not found!");
+            log.error("Exception! User with this id: {} was not found!", userUuid);
+            errorDto.fillParameters(HttpStatus.NOT_FOUND.value(), "Exception! User with this id: " + userUuid + " was not found!");
             return responseDto.setErrorResponse(HttpStatus.NOT_FOUND, errorDto);
         }
         updateExistedFields(requestedUser, savedUser);
@@ -112,16 +113,29 @@ public class UserService {
         return responseDto.fillParameters(HttpStatus.OK, HttpHeaders.EMPTY, null, null, null, null);
     }
 
-    public ResponseDto<UserDto> deleteUser(UUID userId) {
+    public ResponseDto<UserDto> deleteUser(UUID userUuid) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
-        if (ObjectUtils.isEmpty(userId)) {
+        if (ObjectUtils.isEmpty(userUuid)) {
             log.error("Exception, given user id is null!");
             errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given user id is null!");
             return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
         }
+        User foundUser;
+        try{
+            foundUser = userRepository.findByUuid(userUuid).orElse(null);
+        }catch(Exception e){
+            log.error("Exception while trying to find user! Error: {}",e.getMessage());
+            errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to find user! Error: " + e.getMessage());
+            return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
+        }
+        if(foundUser == null){
+            log.error("Exception! User with this id: {} was not found!", userUuid);
+            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception! User with this id: " + userUuid + " was not found!");
+            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
+        }
         try {
-            userRepository.deleteById(userId);
+            userRepository.deleteById(foundUser.getId());
         } catch (Exception e) {
             log.error("Exception while trying to delete a user! Error: {}", e.getMessage());
             errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to delete a user! Error: " + e.getMessage());

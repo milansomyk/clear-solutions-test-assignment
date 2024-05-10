@@ -14,8 +14,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    UUID id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    Integer id;
+    @Column(unique = true, nullable = false)
+    UUID uuid;
     @Column(unique = true, nullable = false)
     String email;
     @Column(nullable = false)

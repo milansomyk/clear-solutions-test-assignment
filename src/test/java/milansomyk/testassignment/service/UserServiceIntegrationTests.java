@@ -38,8 +38,8 @@ public class UserServiceIntegrationTests {
     @Test
     public void UserService_CreateUser_ReturnCreatedStatus() throws Exception {
         RequestDto<UserDto> requestDto = new RequestDto<>();
-        UserDto userDto = new UserDto(null,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
-        User user = new User(null,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
+        UserDto userDto = new UserDto(1, UUID.randomUUID(), "correct@gmail.com", "CorrectName", "CorrectLastname", LocalDate.of(2001, 2, 2), "CorrectStreet", 123123123L);
+        User user = new User(1, UUID.randomUUID(), "correct@gmail.com", "CorrectName", "CorrectLastname", LocalDate.of(2001, 2, 2), "CorrectStreet", 123123123L);
         requestDto.setData(userDto);
         requestDto.setHttpMethod(HttpMethod.POST);
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
@@ -54,23 +54,25 @@ public class UserServiceIntegrationTests {
         responseDto.setHttpHeaders(HttpHeaders.EMPTY);
         responseDto.setHttpStatus(HttpStatus.CREATED);
 
-        when(userMapper.fromDto(userDto)).thenReturn(user);
+        when(userMapper.fromDto(requestDto.getData())).thenReturn(user);
         when(userRepository.save(user)).thenReturn(user);
         ResponseDto<UserDto> user1 = userService.createUser(requestDto);
-        verify(userRepository,times(1)).save(user);
+        verify(userRepository, times(1)).save(user);
 
         Assertions.assertThat(user1.getHttpStatus()).isEqualTo(HttpStatus.CREATED);
     }
+
     @Test
     public void UserService_PatchUser_ReturnOkStatus() throws Exception {
         RequestDto<UserDto> requestDto = new RequestDto<>();
-        UserDto userDto = new UserDto(null,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
-        User user = new User(null,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
+        UUID uuid = UUID.randomUUID();
+        UserDto userDto = new UserDto(4, uuid, "correct@gmail.com", "CorrectName", "CorrectLastname", LocalDate.of(2001, 2, 2), "CorrectStreet", 123123123L);
+        User user = new User(4, uuid, "correct@gmail.com", "CorrectName", "CorrectLastname", LocalDate.of(2001, 2, 2), "CorrectStreet", 123123123L);
         requestDto.setData(userDto);
         requestDto.setHttpMethod(HttpMethod.PATCH);
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         BodyDto<UserDto> bodyDto = new BodyDto<>();
-        UUID uuid = UUID.randomUUID();
+
         bodyDto.setPagination(null);
         bodyDto.setErrors(null);
         bodyDto.setData(userDto);
@@ -80,24 +82,26 @@ public class UserServiceIntegrationTests {
         responseDto.setHttpHeaders(HttpHeaders.EMPTY);
         responseDto.setHttpStatus(HttpStatus.OK);
 
-        when(userRepository.findById(uuid)).thenReturn(Optional.of(user));
+        when(userRepository.findByUuid(userDto.getUuid())).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
-        ResponseDto<UserDto> user1 = userService.patchUser(requestDto,uuid);
-        verify(userRepository,times(1)).save(user);
-        verify(userRepository,times(1)).findById(uuid);
+        ResponseDto<UserDto> user1 = userService.patchUser(requestDto, uuid);
+        verify(userRepository, times(1)).save(user);
+        verify(userRepository, times(1)).findByUuid(userDto.getUuid());
 
         Assertions.assertThat(user1.getHttpStatus()).isEqualTo(HttpStatus.OK);
     }
+
     @Test
     public void UserService_UpdateUser_ReturnOkStatus() throws Exception {
         RequestDto<UserDto> requestDto = new RequestDto<>();
-        UserDto userDto = new UserDto(null,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
-        User user = new User(null,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
+        UUID uuid = UUID.randomUUID();
+        UserDto userDto = new UserDto(3, uuid, "correct@gmail.com", "CorrectName", "CorrectLastname", LocalDate.of(2001, 2, 2), "CorrectStreet", 123123123L);
+        User user = new User(3, uuid, "correct@gmail.com", "CorrectName", "CorrectLastname", LocalDate.of(2001, 2, 2), "CorrectStreet", 123123123L);
         requestDto.setData(userDto);
         requestDto.setHttpMethod(HttpMethod.PUT);
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         BodyDto<UserDto> bodyDto = new BodyDto<>();
-        UUID uuid = UUID.randomUUID();
+
         bodyDto.setPagination(null);
         bodyDto.setErrors(null);
         bodyDto.setData(userDto);
@@ -107,14 +111,15 @@ public class UserServiceIntegrationTests {
         responseDto.setHttpHeaders(HttpHeaders.EMPTY);
         responseDto.setHttpStatus(HttpStatus.OK);
 
-        when(userRepository.findById(uuid)).thenReturn(Optional.of(user));
+        when(userRepository.findByUuid(userDto.getUuid())).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
-        ResponseDto<UserDto> user1 = userService.updateUser(requestDto,uuid);
-        verify(userRepository,times(1)).save(user);
-        verify(userRepository,times(1)).findById(uuid);
+        ResponseDto<UserDto> user1 = userService.updateUser(requestDto, uuid);
+        verify(userRepository, times(1)).save(user);
+        verify(userRepository, times(1)).findByUuid(userDto.getUuid());
 
         Assertions.assertThat(user1.getHttpStatus()).isEqualTo(HttpStatus.OK);
     }
+
     @Test
     public void UserService_DeleteUser_ReturnOkStatus() throws Exception {
         RequestDto<UserDto> requestDto = new RequestDto<>();
@@ -123,7 +128,7 @@ public class UserServiceIntegrationTests {
         requestDto.setHttpMethod(HttpMethod.DELETE);
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         BodyDto<UserDto> bodyDto = new BodyDto<>();
-
+        User user = new User(3, uuid, "correct@gmail.com", "CorrectName", "CorrectLastname", LocalDate.of(2001, 2, 2), "CorrectStreet", 123123123L);
         bodyDto.setPagination(null);
         bodyDto.setErrors(null);
         bodyDto.setData(null);
@@ -132,21 +137,23 @@ public class UserServiceIntegrationTests {
         responseDto.setBody(bodyDto);
         responseDto.setHttpHeaders(HttpHeaders.EMPTY);
         responseDto.setHttpStatus(HttpStatus.OK);
-        ResponseDto<UserDto> user1 = userService.deleteUser(uuid);
-        verify(userRepository,times(1)).deleteById(uuid);
+        when(userRepository.findByUuid(user.getUuid())).thenReturn(Optional.of(user));
+        ResponseDto<UserDto> deleteResponseDto = userService.deleteUser(uuid);
+        verify(userRepository, times(1)).deleteById(user.getId());
 
-        Assertions.assertThat(user1.getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(deleteResponseDto.getHttpStatus()).isEqualTo(HttpStatus.OK);
     }
+
     @Test
     public void UserService_SearchUsersByBirthDateRange_ReturnOkStatus() throws Exception {
         RequestDto<List<UserDto>> listRequestDto = new RequestDto<>();
-        UserDto userDto = new UserDto(null,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
-        UserDto anotherUserDto = new UserDto(null,"anotherCorrect@gmail.com","anotherCorrectName","anotherCorrectLastname", LocalDate.of(2000, 1, 15),"anotherCorrectStreet",123145123L);
+        UserDto userDto = new UserDto(2, UUID.randomUUID(), "correct@gmail.com", "CorrectName", "CorrectLastname", LocalDate.of(2001, 2, 2), "CorrectStreet", 123123123L);
+        UserDto anotherUserDto = new UserDto(3, UUID.randomUUID(), "anotherCorrect@gmail.com", "anotherCorrectName", "anotherCorrectLastname", LocalDate.of(2000, 1, 15), "anotherCorrectStreet", 123145123L);
         List<UserDto> givenUsers = new ArrayList<>();
         givenUsers.add(userDto);
         givenUsers.add(anotherUserDto);
-        User user = new User(null,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
-        User anotherUser = new User(null,"anotherCorrect@gmail.com","anotherCorrectName","anotherCorrectLastname", LocalDate.of(2000, 1, 15),"anotherCorrectStreet",123145123L);
+        User user = new User(2, UUID.randomUUID(), "correct@gmail.com", "CorrectName", "CorrectLastname", LocalDate.of(2001, 2, 2), "CorrectStreet", 123123123L);
+        User anotherUser = new User(3, UUID.randomUUID(), "anotherCorrect@gmail.com", "anotherCorrectName", "anotherCorrectLastname", LocalDate.of(2000, 1, 15), "anotherCorrectStreet", 123145123L);
         List<User> foundUsers = new ArrayList<>();
         foundUsers.add(user);
         foundUsers.add(anotherUser);
@@ -166,11 +173,11 @@ public class UserServiceIntegrationTests {
         responseDto.setHttpStatus(HttpStatus.OK);
         when(userMapper.toDto(user)).thenReturn(userDto);
         when(userMapper.toDto(anotherUser)).thenReturn(anotherUserDto);
-        when(userRepository.searchUserByBirthDateRange(LocalDate.of(2000, 1, 1),LocalDate.of(2003, 1, 1),100,0)).thenReturn(foundUsers);
-        when(userRepository.countAllByBirthDateBetween(LocalDate.of(2000,1,1),LocalDate.of(2003,1,1))).thenReturn(2);
+        when(userRepository.searchUserByBirthDateRange(LocalDate.of(2000, 1, 1), LocalDate.of(2003, 1, 1), 100, 0)).thenReturn(foundUsers);
+        when(userRepository.countAllByBirthDateBetween(LocalDate.of(2000, 1, 1), LocalDate.of(2003, 1, 1))).thenReturn(2);
         ResponseDto<List<UserDto>> listResponseDto = userService.searchUsersByBirthDateRange("2000-01-01", "2003-01-01", 0, 100);
-        verify(userRepository,times(1)).searchUserByBirthDateRange(LocalDate.of(2000, 1, 1),LocalDate.of(2003, 1, 1),100,0);
-        verify(userRepository,times(1)).countAllByBirthDateBetween(LocalDate.of(2000,1,1),LocalDate.of(2003,1,1));
+        verify(userRepository, times(1)).searchUserByBirthDateRange(LocalDate.of(2000, 1, 1), LocalDate.of(2003, 1, 1), 100, 0);
+        verify(userRepository, times(1)).countAllByBirthDateBetween(LocalDate.of(2000, 1, 1), LocalDate.of(2003, 1, 1));
 
         Assertions.assertThat(listResponseDto.getBody().getData()).isEqualTo(givenUsers);
         Assertions.assertThat(listResponseDto.getHttpStatus()).isEqualTo(HttpStatus.OK);
