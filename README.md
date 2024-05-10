@@ -7,9 +7,13 @@
 #### 2. According to the requirements implement the RESTful API based on the web Spring Boot application: controller, responsible for the resource named Users. 
 
 Resources:
-RESTful API Design. Best Practices in a Nutshell.
+
+[RESTful API Design. Best Practices in a Nutshell](https://phauer.com/2015/restful-api-design-best-practices/)
+
 Error Handling for REST with Spring | Baeldung
+
 Testing in Spring Boot | Baeldung
+
 Testing | Spring
 
 ### Requirements:
