@@ -8,6 +8,7 @@ import milansomyk.testassignment.dto.ResponseDto;
 import milansomyk.testassignment.dto.UserDto;
 import milansomyk.testassignment.service.UserService;
 
+import milansomyk.testassignment.service.ValidationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,6 +24,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,6 +40,8 @@ public class UserControllerIntegrationTest {
     private MockMvc mockMvc;
     @Mock
     private UserService userService;
+    @Mock
+    private ValidationService validationService;
     @InjectMocks
     private UserController userController;
     private ObjectMapper objectMapper;
@@ -70,10 +75,11 @@ public class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.data[0].email").value(userDto.getEmail()));
     }
     @Test
-    public void UserController_CreateUser_ReturnUser() throws Exception {
+    public void UserController_CreateUser_ReturnUser() throws Exception  {
         RequestDto<UserDto> requestDto = new RequestDto<>();
         UserDto userDto = new UserDto(null,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
         requestDto.setData(userDto);
+        requestDto.setHttpMethod(HttpMethod.POST);
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         BodyDto<UserDto> userDtoBodyDto = new BodyDto<>();
         userDtoBodyDto.setPagination(null);
@@ -97,6 +103,7 @@ public class UserControllerIntegrationTest {
         UUID uuid = UUID.randomUUID();
         UserDto userDto = new UserDto(null,"updated@gmail.com","UpdatedName","UpdatedLastName", LocalDate.of(1989, 10, 22),"UpdatedStreet",456456456L);
         requestDto.setData(userDto);
+        requestDto.setHttpMethod(HttpMethod.PUT);
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         BodyDto<UserDto> userDtoBodyDto = new BodyDto<>();
         userDtoBodyDto.setPagination(null);
@@ -120,6 +127,7 @@ public class UserControllerIntegrationTest {
         UUID uuid = UUID.randomUUID();
         UserDto userDto = new UserDto(null,"patched@gmail.com",null,"PatchedLastName", null,null,null);
         requestDto.setData(userDto);
+        requestDto.setHttpMethod(HttpMethod.PATCH);
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         BodyDto<UserDto> userDtoBodyDto = new BodyDto<>();
         userDtoBodyDto.setPagination(null);
@@ -129,6 +137,7 @@ public class UserControllerIntegrationTest {
         responseDto.setBody(userDtoBodyDto);
         responseDto.setHttpHeaders(HttpHeaders.EMPTY);
         responseDto.setHttpStatus(HttpStatus.OK);
+        given(validationService.validate(requestDto)).willReturn(new HashMap<>());
         given(userService.patchUser(requestDto,uuid)).willReturn(responseDto);
         mockMvc.perform(patch("/users/"+uuid)
                         .accept(MediaType.APPLICATION_JSON)

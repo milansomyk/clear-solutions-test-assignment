@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -22,7 +23,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-
 public class UserService {
     @Autowired
     private final UserMapper userMapper;
@@ -32,23 +32,7 @@ public class UserService {
     public ResponseDto<UserDto> createUser(RequestDto<UserDto> requestDto) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
-        if (requestDto == null || requestDto.getData() == null) {
-            log.error("Exception, given User data is null!");
-            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User data is null!");
-            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
-        }
-        if (!requestDto.getData().isAllRequired()) {
-            log.error("Exception, not given all required User parameters!");
-            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, not given all required User parameters!");
-            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
-        }
-        UserDto requestedUser = requestDto.getData();
-        if (requestedUser.getBirthDate().plusYears(Constants.USER_MIN_AGE).isAfter(LocalDate.now())) {
-            log.error("Exception, given user birth date is less than ");
-            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given user birth date is less than " + Constants.USER_MIN_AGE + " years!");
-            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
-        }
-        User user = userMapper.fromDto(requestedUser);
+        User user = userMapper.fromDto(requestDto.getData());
         User savedUser;
         try {
             savedUser = userRepository.save(user);
@@ -58,24 +42,14 @@ public class UserService {
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setLocation(URI.create("/users/" + savedUser.getId()));
-        return responseDto.fillParameters(HttpStatus.CREATED, httpHeaders, null, null,null,null);
+        httpHeaders.setLocation(URI.create(Constants.USER_ENDPOINT + "/" + savedUser.getId()));
+        return responseDto.fillParameters(HttpStatus.CREATED, httpHeaders, null, null, null, null);
     }
 
     public ResponseDto<UserDto> patchUser(RequestDto<UserDto> requestDto, UUID userId) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
-        if (requestDto == null || requestDto.getData() == null) {
-            log.error("Exception, given User data is null!");
-            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User data is null!");
-            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
-        }
-        if (!requestDto.getData().isAnyRequired()) {
-            log.error("Exception, not given any required User parameters!");
-            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, not given any required User parameters!");
-            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
-        }
-        if (userId == null) {
+        if (ObjectUtils.isEmpty(userId)) {
             log.error("Exception, given User id is null!");
             errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User id is null!");
             return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
@@ -108,17 +82,7 @@ public class UserService {
     public ResponseDto<UserDto> updateUser(RequestDto<UserDto> requestDto, UUID userId) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
-        if (requestDto == null || requestDto.getData() == null) {
-            log.error("Exception, given User data is null!");
-            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User data is null!");
-            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
-        }
-        if (!requestDto.getData().isAllFieldsNotNull()) {
-            log.error("Exception, not given all User parameters!");
-            errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, not given all User parameters!");
-            return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
-        }
-        if (userId == null) {
+        if (ObjectUtils.isEmpty(userId)) {
             log.error("Exception, given User id is null!");
             errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given User id is null!");
             return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
@@ -151,7 +115,7 @@ public class UserService {
     public ResponseDto<UserDto> deleteUser(UUID userId) {
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         ErrorDto errorDto = new ErrorDto();
-        if (userId == null) {
+        if (ObjectUtils.isEmpty(userId)) {
             log.error("Exception, given user id is null!");
             errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), "Exception, given user id is null!");
             return responseDto.setErrorResponse(HttpStatus.BAD_REQUEST, errorDto);
@@ -198,9 +162,9 @@ public class UserService {
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
         }
         Integer totalSearchedUsers;
-        try{
+        try {
             totalSearchedUsers = userRepository.countAllByBirthDateBetween(fromDate, toDate);
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Exception while trying to get searched users total number! Error: {}", e.getMessage());
             errorDto.fillParameters(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Exception while trying to get searched users total number! Error: " + e.getMessage());
             return responseDto.setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorDto);
@@ -211,11 +175,11 @@ public class UserService {
         }
 
         PaginationLinks paginationLinks = new PaginationLinks();
-        if(offset-limit>=0){
-            paginationLinks.setPrev(Constants.USER_ENDPOINT + "?from=" + from + "&to=" + to + "&offset=" + (offset-limit) + "&limit=" + limit);
+        if (offset - limit >= 0) {
+            paginationLinks.setPrev(Constants.USER_ENDPOINT + "?from=" + from + "&to=" + to + "&offset=" + (offset - limit) + "&limit=" + limit);
         }
-        if(offset+limit<totalSearchedUsers){
-            paginationLinks.setNext(Constants.USER_ENDPOINT + "?from=" + from + "&to=" + to + "&offset=" + (offset+limit) + "&limit=" + limit);
+        if (offset + limit < totalSearchedUsers) {
+            paginationLinks.setNext(Constants.USER_ENDPOINT + "?from=" + from + "&to=" + to + "&offset=" + (offset + limit) + "&limit=" + limit);
         }
 
         PaginationInfo paginationInfo = new PaginationInfo();

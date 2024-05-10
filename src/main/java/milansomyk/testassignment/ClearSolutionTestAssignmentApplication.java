@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class ClearSolutionTestAssignmentApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ClearSolutionTestAssignmentApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(ClearSolutionTestAssignmentApplication.class, args);
+    }
 }

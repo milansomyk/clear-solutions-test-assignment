@@ -15,12 +15,12 @@ public class ExceptionController {
     public ResponseEntity<ErrorResponseDto> handleNotFound(Exception ex) {
         ErrorResponseDto errorResponseDto = new ErrorResponseDto();
         ErrorDto errorDto = new ErrorDto();
-        if(ex instanceof ChangeSetPersister.NotFoundException || ex instanceof ClassNotFoundException || ex instanceof NoResourceFoundException) {
-            errorDto.fillParameters(HttpStatus.NOT_FOUND.value(),ex.getMessage());
+        if (ex instanceof ChangeSetPersister.NotFoundException || ex instanceof ClassNotFoundException || ex instanceof NoResourceFoundException) {
+            errorDto.fillParameters(HttpStatus.NOT_FOUND.value(), ex.getMessage());
             errorResponseDto.addErrors(errorDto);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponseDto);
         }
-        errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(),ex.getMessage());
+        errorDto.fillParameters(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
         errorResponseDto.addErrors(errorDto);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponseDto);
     }

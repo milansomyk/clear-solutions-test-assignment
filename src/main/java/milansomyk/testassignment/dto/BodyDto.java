@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+
 @NoArgsConstructor
 @Data
 public class BodyDto<T> {
@@ -13,10 +14,12 @@ public class BodyDto<T> {
     List<ErrorDto> errors = new ArrayList<>();
     @JsonInclude(JsonInclude.Include.NON_NULL)
     T data;
+
     public BodyDto<T> addError(ErrorDto error) {
         this.errors.add(error);
         return this;
     }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     PaginationLinks links;
     @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -12,5 +12,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query(nativeQuery = true, value = "SELECT * FROM user WHERE birth_date BETWEEN :from AND :to LIMIT :limit OFFSET :offset")
     List<User> searchUserByBirthDateRange(LocalDate from, LocalDate to, Integer limit, Integer offset);
+
     Integer countAllByBirthDateBetween(LocalDate from, LocalDate to);
 }
