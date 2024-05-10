@@ -23,10 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 
 import static org.mockito.BDDMockito.given;
@@ -57,7 +54,8 @@ public class UserControllerIntegrationTest {
     @Test
     public void UserController_GetUsersByBirthDate_ReturnUserList() throws Exception {
         ResponseDto<List<UserDto>> listResponseDto = new ResponseDto<>();
-        UserDto userDto = new UserDto(null,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
+        UUID uuid = UUID.randomUUID();
+        UserDto userDto = new UserDto(2,uuid,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
         BodyDto<UserDto> userDtoBodyDto = new BodyDto<>();
         userDtoBodyDto.setPagination(null);
         userDtoBodyDto.setErrors(null);
@@ -77,7 +75,7 @@ public class UserControllerIntegrationTest {
     @Test
     public void UserController_CreateUser_ReturnUser() throws Exception  {
         RequestDto<UserDto> requestDto = new RequestDto<>();
-        UserDto userDto = new UserDto(null,"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
+        UserDto userDto = new UserDto(null,UUID.randomUUID(),"correct@gmail.com","CorrectName","CorrectLastname", LocalDate.of(2001, 2, 2),"CorrectStreet",123123123L);
         requestDto.setData(userDto);
         requestDto.setHttpMethod(HttpMethod.POST);
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
@@ -101,7 +99,7 @@ public class UserControllerIntegrationTest {
     public void UserController_UpdateUser_ReturnUser() throws Exception {
         RequestDto<UserDto> requestDto = new RequestDto<>();
         UUID uuid = UUID.randomUUID();
-        UserDto userDto = new UserDto(null,"updated@gmail.com","UpdatedName","UpdatedLastName", LocalDate.of(1989, 10, 22),"UpdatedStreet",456456456L);
+        UserDto userDto = new UserDto(null,UUID.randomUUID(),"updated@gmail.com","UpdatedName","UpdatedLastName", LocalDate.of(1989, 10, 22),"UpdatedStreet",456456456L);
         requestDto.setData(userDto);
         requestDto.setHttpMethod(HttpMethod.PUT);
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
@@ -125,19 +123,19 @@ public class UserControllerIntegrationTest {
     public void UserController_PatchUser_ReturnUser() throws Exception {
         RequestDto<UserDto> requestDto = new RequestDto<>();
         UUID uuid = UUID.randomUUID();
-        UserDto userDto = new UserDto(null,"patched@gmail.com",null,"PatchedLastName", null,null,null);
+        UserDto userDto = new UserDto(null,uuid,"patched@gmail.com",null,"PatchedLastName", null,null,null);
         requestDto.setData(userDto);
         requestDto.setHttpMethod(HttpMethod.PATCH);
         ResponseDto<UserDto> responseDto = new ResponseDto<>();
         BodyDto<UserDto> userDtoBodyDto = new BodyDto<>();
         userDtoBodyDto.setPagination(null);
         userDtoBodyDto.setErrors(null);
-        userDtoBodyDto.setData(new UserDto(null,"patched@gmail.com","UpdatedName","PatchedLastName", LocalDate.of(1989, 10, 22),"UpdatedStreet",456456456L));
+        userDtoBodyDto.setData(new UserDto(null,uuid,"patched@gmail.com","UpdatedName","PatchedLastName", LocalDate.of(1989, 10, 22),"UpdatedStreet",456456456L));
         userDtoBodyDto.setLinks(null);
         responseDto.setBody(userDtoBodyDto);
         responseDto.setHttpHeaders(HttpHeaders.EMPTY);
         responseDto.setHttpStatus(HttpStatus.OK);
-        given(validationService.validate(requestDto)).willReturn(new HashMap<>());
+        given(validationService.validate(requestDto)).willReturn(Collections.emptyMap());
         given(userService.patchUser(requestDto,uuid)).willReturn(responseDto);
         mockMvc.perform(patch("/users/"+uuid)
                         .accept(MediaType.APPLICATION_JSON)

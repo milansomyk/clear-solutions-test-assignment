@@ -1,5 +1,6 @@
 package milansomyk.testassignment.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -12,8 +13,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class UserDto {
+    @JsonIgnore
+    Integer id;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    UUID id;
+    UUID uuid;
     @Email(message = "Validation Exception! Error: Email is not validated")
     String email;
     @Size(min = 2, max = 32, message = "Validation Exception! Error: First name must be between 2 and 32 characters long")
