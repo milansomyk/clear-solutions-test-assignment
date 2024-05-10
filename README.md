@@ -10,11 +10,11 @@ Resources:
 
 [RESTful API Design. Best Practices in a Nutshell](https://phauer.com/2015/restful-api-design-best-practices/)
 
-Error Handling for REST with Spring | Baeldung
+[Error Handling for REST with Spring | Baeldung](https://www.baeldung.com/exception-handling-for-rest-with-spring)
 
-Testing in Spring Boot | Baeldung
+[Testing in Spring Boot | Baeldung](https://www.baeldung.com/spring-boot-testing#unit-testing-with-webmvctest)
 
-Testing | Spring
+[Testing | Spring](https://docs.spring.io/spring-framework/docs/current/reference/html/testing.html#spring-mvc-test-server)
 
 ### Requirements:
 #### 1. It has the following fields:
